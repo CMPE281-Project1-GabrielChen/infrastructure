@@ -123,20 +123,32 @@ resource "aws_s3_bucket_policy" "s3_user_file_store_policy_attach" {
 	policy = data.aws_iam_policy_document.user_file_store_s3_policy.json
 }
 
-resource "aws_dynamodb_table" "files_table" {
-	name = "${terraform.workspace}-files"
-	billing_mode = "PROVISIONED"
-	read_capacity = 1
-	write_capacity = 1
-
-	hash_key = "FileID"
-
-	attribute {
-		name = "FileID"
-		type = "S"
-	}
-	
-	attribute {
-		name = "UserID"
-	}
+resource "aws_cloudfront_public_key" "file_management_api_signed_pubkey" {
+	comment = "public key for signed URLs from CF for file store"
+	encoded_key = file("keys/cf_file_management_public_key.pem")
+	name = "${terraform.workspace}-file-store-public-key"
 }
+
+resource "aws_cloudfront_key_group" "file_store_keygroup" {
+	comment = "file store trusted keygroup"
+	items = [aws_cloudfront_public_key.file_management_api_signed_pubkey.id]
+	name = "${terraform.workspace}-file-store-keygroup"
+}
+
+# resource "aws_dynamodb_table" "files_table" {
+# 	name = "${terraform.workspace}-files"
+# 	billing_mode = "PROVISIONED"
+# 	read_capacity = 1
+# 	write_capacity = 1
+
+# 	hash_key = "FileID"
+
+# 	attribute {
+# 		name = "FileID"
+# 		type = "S"
+# 	}
+	
+# 	attribute {
+# 		name = "UserID"
+# 	}
+# }
