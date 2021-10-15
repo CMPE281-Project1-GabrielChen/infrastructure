@@ -122,3 +122,21 @@ resource "aws_s3_bucket_policy" "s3_user_file_store_policy_attach" {
 	bucket = aws_s3_bucket.s3_user_file_store.id
 	policy = data.aws_iam_policy_document.user_file_store_s3_policy.json
 }
+
+resource "aws_dynamodb_table" "files_table" {
+	name = "${terraform.workspace}-files"
+	billing_mode = "PROVISIONED"
+	read_capacity = 1
+	write_capacity = 1
+
+	hash_key = "FileID"
+
+	attribute {
+		name = "FileID"
+		type = "S"
+	}
+	
+	attribute {
+		name = "UserID"
+	}
+}
