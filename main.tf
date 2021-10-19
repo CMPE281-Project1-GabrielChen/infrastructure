@@ -39,6 +39,21 @@ resource "aws_s3_bucket" "s3_user_file_store" {
 		}
 	}
 
+	cors_rule {
+		allowed_headers = ["*"]
+		allowed_methods = [
+			"PUT",
+			"POST",
+			"DELETE",
+			"HEAD",
+		]
+		allowed_origins = [
+			"https://ui.gabrielchencloudfiles.link",
+		]
+		expose_headers = []
+		max_age_seconds = 0
+	}
+
 	versioning {
 		enabled = true
 	}
@@ -78,6 +93,18 @@ resource "aws_cloudfront_distribution" "cf_user_file_store_cache" {
 		min_ttl                = 0
     	default_ttl            = 0 
     	max_ttl                = 0 
+
+		lambda_function_association {
+			event_type = "origin-response"
+			include_body = false
+			lambda_arn = "arn:aws:lambda:us-east-1:988203901673:function:cloudfront-lambda-edge-cors:9"
+		}
+		
+		lambda_function_association {
+			event_type = "viewer-response"
+			include_body = false
+			lambda_arn = "arn:aws:lambda:us-east-1:988203901673:function:cloudfront-lambda-edge-cors:9"
+		}
 
 		forwarded_values {
 		  query_string = false
@@ -120,8 +147,7 @@ data "aws_iam_policy_document" "user_file_store_s3_policy" {
 		principals {
 			type = "AWS"
 			identifiers = [
-				aws_cloudfront_origin_access_identity.cf_user_file_store_oai.iam_arn,
-				data.aws_iam_role.file_management_lambdas_role.arn
+				aws_cloudfront_origin_access_identity.cf_user_file_store_oai.iam_arn
 			]
 		}
 	}
@@ -226,6 +252,15 @@ resource "aws_cloudfront_distribution" "cf_cloud_drive_front_end" {
 	is_ipv6_enabled = true
 	comment = "CF Distro for User File Storage Cache"
 
+	aliases = ["ui.gabrielchencloudfiles.link"]
+
+	viewer_certificate {
+		acm_certificate_arn = "arn:aws:acm:us-east-1:988203901673:certificate/9956bc12-eca0-4c3a-9ff9-d11e3eba3077"
+		cloudfront_default_certificate = false 
+		minimum_protocol_version = "TLSv1.2_2021"
+		ssl_support_method = "sni-only"
+	}
+
 	default_cache_behavior {
 		allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
 		cached_methods = ["GET", "HEAD"]
@@ -254,10 +289,6 @@ resource "aws_cloudfront_distribution" "cf_cloud_drive_front_end" {
 		  restriction_type = "whitelist"
 		  locations = ["US"]
 	  }
-	}
-
-	viewer_certificate {
-	  cloudfront_default_certificate = true
 	}
 }
 
