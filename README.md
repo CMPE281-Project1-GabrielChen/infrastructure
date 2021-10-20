@@ -2,7 +2,7 @@
 AWS Resources managed by terraform
 
 ## Architecture Diagram
-![Architecture Diagram](./diagrams/281P1ArchitectureV5.jpg "V5")
+![Architecture Diagram](./diagrams/281P1ArchitectureV6.jpg "V6")
 
 ## Overall Architecture Notes
 The goal of this architecture design is to explore a serverless architecture. All of the infrastructure in the application is fully managed by AWS, using PAAS, and SAAS solutions.
